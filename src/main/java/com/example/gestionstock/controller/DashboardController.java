@@ -1,5 +1,9 @@
 package com.example.gestionstock.controller;
 
+import com.example.gestionstock.repository.CategoryRepository;
+import com.example.gestionstock.services.CommandeService;
+import com.example.gestionstock.services.ProductService;
+import com.example.gestionstock.services.impl.ProductServiceImpl;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,13 +13,23 @@ import java.util.Map;
 
 @Controller
 public class DashboardController {
+    private final CategoryRepository categoryRepository;
+    private ProductService productService;
+    private CommandeService commandeService;
+
+    public DashboardController(ProductService productService, CommandeService commandeService, CategoryRepository categoryRepository) {
+        this.productService = productService;
+        this.commandeService = commandeService;
+        this.categoryRepository = categoryRepository;
+    }
+
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
         // Simuler les données
-        int totalItems = 227;
-        double inventoryValue = 24327.73;
-        int lowStockItems = 0;
-        int totalCategories = 5;
+        long totalItems = productService.countAllProducts();
+        double inventoryValue = commandeService.getTotalPriceOfAllCommandes();
+        long lowStockItems = productService.nombreProduitParEnStockFaible();
+        long totalCategories = categoryRepository.count();
 
         Map<String, Integer> itemsByCategory = new LinkedHashMap<>();
         itemsByCategory.put("Electronics", 3);

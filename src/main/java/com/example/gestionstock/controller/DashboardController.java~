@@ -1,6 +1,0 @@
-package com.example.gestionstock.controller;
-
-@Controller
-public class DashboardController {
-    
-}

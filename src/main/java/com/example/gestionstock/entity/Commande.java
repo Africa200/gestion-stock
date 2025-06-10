@@ -3,6 +3,9 @@ package com.example.gestionstock.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Getter
 @Setter
@@ -14,6 +17,8 @@ public class Commande {
     private Long id;
     @Embedded
     private ClientInfo clientInfo;
-    private double prixTotal;
+    private Double prixTotal;
+    @ManyToMany
+    private List<Product> products =new ArrayList<>();
 
 }

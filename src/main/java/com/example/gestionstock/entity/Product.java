@@ -16,5 +16,7 @@ public class Product {
     @ManyToOne
     private Category category;
     private double prixUnitaire;
+    private String PathImage;
     private int quantiteEnStock;
+    private int seuilAlerte;
 }
