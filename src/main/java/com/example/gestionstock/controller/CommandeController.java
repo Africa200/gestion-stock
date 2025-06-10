@@ -58,7 +58,7 @@ public class CommandeController {
     public String voirDetails(@PathVariable Long id, Model model) {
         CommadeDTO commande = commandeService.getCommandeById(id);
         model.addAttribute("commande", commande);
-        return "commande/details";
+        return "details";
     }
 
     @GetMapping("/commandes/facture/{id}")
