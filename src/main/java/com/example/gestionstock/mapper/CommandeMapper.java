@@ -11,13 +11,14 @@ import java.util.List;
 
 @Component
 public class CommandeMapper {
-    // ⚠️ version SANS mapping des produits
+    // version SANS mapping des produits
     public static Commande toCommandeSansProduits(CommadeDTO commandeDto) {
         Commande commande = new Commande();
         commande.setId(commandeDto.getId());
         commande.setClientInfo(commandeDto.getClientInfo());
         commande.setPrixTotal(commandeDto.getPrixTotal());
-        // Ne pas mapper les produits ici ! Ils seront ajoutés à part
+        commande.setProductIds(commandeDto.getProductIds());
+        commande.setQuantities(commandeDto.getQuantities());
         return commande;
     }
 
@@ -31,6 +32,8 @@ public class CommandeMapper {
         commandeDto.setClientInfo(commande.getClientInfo());
         commandeDto.setProducts(productDTOS);
         commandeDto.setPrixTotal(commande.getPrixTotal());
+        commandeDto.setProductIds(commande.getProductIds());
+        commandeDto.setQuantities(commande.getQuantities());
         return commandeDto;
     }
 }

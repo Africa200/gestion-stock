@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 @Getter
@@ -19,9 +20,8 @@ public class CommadeDTO {
     @Embedded
     private ClientInfo clientInfo;
     private Double prixTotal;
-    @JsonIgnore // si tu utilises JSON
-    @Transient  // facultatif si utilisé dans JPA
+    @Transient
     private List<ProductDTO> products;
     private List<Long> productIds;
-
+    private List<Integer> quantities;
 }

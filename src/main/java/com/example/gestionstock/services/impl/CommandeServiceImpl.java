@@ -9,9 +9,7 @@ import com.example.gestionstock.mapper.ProductMapper;
 import com.example.gestionstock.repository.CommandeRepository;
 import com.example.gestionstock.services.CommandeService;
 import com.itextpdf.text.*;
-import com.itextpdf.text.pdf.PdfPCell;
-import com.itextpdf.text.pdf.PdfPTable;
-import com.itextpdf.text.pdf.PdfWriter;
+import com.itextpdf.text.pdf.*;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
@@ -33,7 +31,7 @@ public class CommandeServiceImpl implements CommandeService {
     }
 
     @Override
-    public CommadeDTO addCommande(CommadeDTO commandeDTO, List<Long> productIds) {
+    public CommadeDTO addCommande(CommadeDTO commandeDTO, List<Long> productIds,LinkedHashMap<Product, Integer> productIntegerLinkedHashMap) {
 
         Commande commande = CommandeMapper.toCommandeSansProduits(commandeDTO);
 
@@ -41,7 +39,15 @@ public class CommandeServiceImpl implements CommandeService {
                 .map(id -> ProductMapper.toProduct(productService.getProductById(id)))
                 .toList();
 
+
         commande.setProducts(validatedProducts);
+        // Decrementer le stock des produits de la commande
+        for (Map.Entry<Product, Integer> entry : productIntegerLinkedHashMap.entrySet()) {
+            Product product = entry.getKey();
+            Integer quantity = entry.getValue();
+            product.setQuantiteEnStock(product.getQuantiteEnStock() - quantity);
+            productService.updateProduct(ProductMapper.toProductDTO(product));
+        }
         Commande saved = commandeRepository.save(commande);
         return CommandeMapper.toCommadeDTO(saved);
     }
@@ -116,14 +122,31 @@ public class CommandeServiceImpl implements CommandeService {
     }
 
     @Override
-    public byte[] genererFacturePourCommande(Long id) {
+    public byte[] genererFacturePourCommande(Long id, LinkedHashMap<Product,Integer> map) {
         Commande commande = commandeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Commande introuvable"));
 
         try {
             Document document = new Document();
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            PdfWriter.getInstance(document, out);
+            PdfWriter writer = PdfWriter.getInstance(document, out);
+
+            // Ajout d'un filigrane
+            writer.setPageEvent(new PdfPageEventHelper() {
+                @Override
+                public void onEndPage(PdfWriter writer, Document document) {
+                    try {
+                        PdfContentByte canvas = writer.getDirectContentUnder();
+                        Font watermarkFont = new Font(Font.FontFamily.HELVETICA, 52, Font.BOLD, new GrayColor(0.75f));
+                        Phrase watermark = new Phrase("RootManagement", watermarkFont);
+                        ColumnText.showTextAligned(canvas, Element.ALIGN_CENTER,
+                                watermark, 297.5f, 421, 45); // Centré et incliné
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+
             document.open();
 
             // Logo
@@ -150,31 +173,42 @@ public class CommandeServiceImpl implements CommandeService {
             infos.setSpacingAfter(15f);
             document.add(infos);
 
-            // Tableau produits
-            PdfPTable table = new PdfPTable(2);
+            // Tableau des produits
+            PdfPTable table = new PdfPTable(4);
             table.setWidthPercentage(100);
             table.setSpacingBefore(10f);
-            table.setWidths(new float[]{4, 2});
+            table.setWidths(new float[]{3, 2, 2, 2});
 
             Font headFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
-            PdfPCell h1 = new PdfPCell(new Phrase("Produit", headFont));
-            PdfPCell h2 = new PdfPCell(new Phrase("Prix (FCFA)", headFont));
-            h1.setBackgroundColor(BaseColor.LIGHT_GRAY);
-            h2.setBackgroundColor(BaseColor.LIGHT_GRAY);
-            h1.setHorizontalAlignment(Element.ALIGN_CENTER);
-            h2.setHorizontalAlignment(Element.ALIGN_CENTER);
-            table.addCell(h1);
-            table.addCell(h2);
+            String[] headers = {"Produit", "Prix unitaire", "Quantité", "Total"};
+            for (String header : headers) {
+                PdfPCell cell = new PdfPCell(new Phrase(header, headFont));
+                cell.setBackgroundColor(BaseColor.LIGHT_GRAY);
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                table.addCell(cell);
+            }
 
-            for (Product p : commande.getProducts()) {
-                table.addCell(p.getLibelle());
-                table.addCell(String.valueOf(p.getPrixUnitaire()));
+            double totalCommande = 0.0;
+
+            for (Map.Entry<Product,Integer> ligne : map.entrySet()) {
+                Product produit = ligne.getKey();
+                int quantite = ligne.getValue();
+                double prixUnitaire = produit.getPrixUnitaire();
+                double totalProduit = prixUnitaire * quantite;
+
+                table.addCell(produit.getLibelle());
+                table.addCell(String.format("%.2f", prixUnitaire));
+                table.addCell(String.valueOf(quantite));
+                table.addCell(String.format("%.2f", totalProduit));
+
+                totalCommande += totalProduit;
             }
 
             document.add(table);
 
-            // Total
-            Paragraph total = new Paragraph("\nPrix total : " + commande.getPrixTotal() + " FCFA", infoFont);
+            // Total global
+            Font boldFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
+            Paragraph total = new Paragraph("\nPrix total : " + String.format("%.2f", totalCommande) + " FCFA", boldFont);
             total.setAlignment(Element.ALIGN_RIGHT);
             document.add(total);
 
@@ -183,6 +217,39 @@ public class CommandeServiceImpl implements CommandeService {
         } catch (Exception e) {
             throw new RuntimeException("Erreur PDF : " + e.getMessage(), e);
         }
-
     }
+
+
+
+    @Override
+    public LinkedHashMap<Product,Integer> matchProductsToCommande(List<Long> productIds,List<Integer> quantities) {
+        LinkedHashMap<Product,Integer> map = new LinkedHashMap<>();
+        for (int i=0;i<=productIds.size()-1;i++){
+
+            ProductDTO byId = productService.getProductById(productIds.get(i));
+            Product product = ProductMapper.toProduct(byId);
+            map.put(product,quantities.get(i));
+        }
+        return map;
+    }
+
+    @Override
+    public Double calculCommandePriceWithProduct(LinkedHashMap<Product, Integer> list) {
+        Double montant=0.0;
+        for (Map.Entry<Product,Integer> entry : list.entrySet()){
+            montant+=entry.getKey().getPrixUnitaire()*entry.getValue();
+        }
+        return montant;
+    }
+
+    @Override
+    public Boolean verifierQuantiteEnStock(LinkedHashMap<Product, Integer> map) {
+        for (Map.Entry<Product, Integer> entry : map.entrySet()) {
+            if (entry.getKey().getQuantiteEnStock() < entry.getValue()) {
+                throw new RuntimeException("Quantité en stock insuffisante pour " + entry.getKey().getLibelle());
+            }
+        }
+        return true;
+    }
+
 }

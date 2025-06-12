@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 @Entity
@@ -20,5 +21,7 @@ public class Commande {
     private Double prixTotal;
     @ManyToMany
     private List<Product> products =new ArrayList<>();
+    private List<Long> productIds;
+    private List<Integer> quantities;
 
 }

@@ -5,6 +5,7 @@
     <title>Dashboard</title>
     <link rel="stylesheet" href="/bootstrap-icons/bootstrap-icons.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
     <style>
         body {
             background-color: #f5f7fa;
@@ -43,6 +44,14 @@
         <!-- Main Content -->
         <div class="col-md-10 p-4">
             <h3>Dashboard</h3>
+
+            <div class="mb-4 d-flex justify-content-end">
+                <a class="btn btn-primary" th:href="@{/rapport/generer}" target="_blank">
+                    <i class="bi bi-file-earmark-pdf"></i> Générer le rapport PDF
+                </a>
+            </div>
+
+
             <div class="row g-4 my-3">
                 <div class="col-md-3">
                     <div class="card shadow-sm p-3">
@@ -82,18 +91,45 @@
                 </div>
             </div>
 
-            <div class="mt-4">
-                <h5>Items by Category</h5>
-                <div th:each="entry : ${itemsByCategory}">
-                    <p th:text="${entry.key} + ' (' + entry.value + ' items)'"></p>
-                    <div class="progress mb-3">
-                        <div class="progress-bar" role="progressbar"
-                             th:style="'width: ' + (${entry.value} * 100 / ${totalItems}) + '%'"
-                             th:text="(${entry.value} * 100 / ${totalItems}) + '%'">
+            <div class="row mt-4">
+                <!-- Produits en stock faible -->
+                <div class="col-md-6">
+                    <div class="card shadow-sm p-3">
+                        <h5>Produits en stock faible</h5>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item" th:each="item : ${lowStockProductList}">
+                                <span th:text="${item.libelle}"></span> -
+                                <span th:text="'Quantité: ' + ${item.quantiteEnStock}"></span>
+                            </li>
+                            <li class="list-group-item" th:if="${#lists.isEmpty(lowStockProductList)}">
+                                Aucun produit en stock faible.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Nombre de produits par catégorie -->
+                <div class="col-md-6">
+                    <div class="card shadow-sm p-3">
+                        <h5>Produits par catégorie</h5>
+                            <div th:if="${totalItems == 0}">
+                                <p>Aucun produit trouvé.</p>
+                            </div>
+
+                            <div th:if="${totalItems > 0}">
+                                <div th:each="entry : ${itemsByCategory}">
+                                    <p th:text="${entry.key.name} + ': ' + ${entry.value}"></p>
+
+                                    <div class="progress-bar-container">
+                                        <div class="progress-bar" th:style="'width:' + (${entry.value * 100 / totalItems}) + '%'"></div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 </div>

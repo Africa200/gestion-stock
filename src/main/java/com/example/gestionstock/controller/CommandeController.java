@@ -2,7 +2,7 @@ package com.example.gestionstock.controller;
 
 import com.example.gestionstock.dtos.CommadeDTO;
 import com.example.gestionstock.dtos.ProductDTO;
-import com.example.gestionstock.entity.Commande;
+import com.example.gestionstock.entity.Product;
 import com.example.gestionstock.services.CommandeService;
 import com.example.gestionstock.services.ProductService;
 import org.springframework.http.HttpHeaders;
@@ -11,8 +11,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 
 @Controller
@@ -33,18 +36,44 @@ public class CommandeController {
     }
     @PostMapping("/commandes/add")
     public String addCommande(@ModelAttribute CommadeDTO commandeDTO,
-                              @RequestParam(name = "productIds", required = false) List<Long> productIds) {
-        List<ProductDTO> produits = productService.getProductsByIds(commandeDTO.getProductIds());
-        //produits.stream().map(p-> p.getPrixUnitaire()*commandeDTO).toList();
-        commandeDTO.setProducts(produits);
-        commandeService.addCommande(commandeDTO, productIds);
+                              @RequestParam(name = "productIds", required = false) List<Long> productIds,
+                              @RequestParam(name = "quantities", required = false) List<Integer> quantities,
+                              Model model, RedirectAttributes redirectAttributes, BindingResult bindingResult) {
 
-        return "redirect:/commandes";
-    }
+        try {
+            // Validation des paramètres
+            if (productIds == null || quantities == null || productIds.isEmpty() || quantities.isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "Erreur technique. Veillez entrez des donnees valide");
+                return "redirect:/commandes";
+            }
 
-    @PostMapping("/commandes/edit")
-    public String updateCommande(@ModelAttribute CommadeDTO commandeDTO) {
-        commandeService.updateCommade(commandeDTO);
+            LinkedHashMap<Product, Integer> productMap = commandeService.matchProductsToCommande(productIds, quantities);
+
+            // Vérification du stock
+            commandeService.verifierQuantiteEnStock(productMap);
+
+            Double montantTotal = commandeService.calculCommandePriceWithProduct(productMap);
+            List<ProductDTO> produits = productService.getProductsByIds(productIds);
+
+            commandeDTO.setProducts(produits);
+            commandeDTO.setPrixTotal(montantTotal);
+            commandeDTO.setProductIds(productIds);
+            commandeDTO.setQuantities(quantities);
+
+            CommadeDTO savedCommande = commandeService.addCommande(commandeDTO, productIds, productMap);
+
+            redirectAttributes.addFlashAttribute("success", "Commande #" + savedCommande.getId() + " créée avec succès");
+            redirectAttributes.addFlashAttribute("commadeDTO", new CommadeDTO());
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.commadeDTO", bindingResult);
+            redirectAttributes.addFlashAttribute("commadeDTO", commandeDTO);
+            redirectAttributes.addFlashAttribute("productIds", productIds);
+            redirectAttributes.addFlashAttribute("quantities", quantities);
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+
+            return "redirect:/commandes";
+        }
         return "redirect:/commandes";
     }
 
@@ -63,7 +92,11 @@ public class CommandeController {
 
     @GetMapping("/commandes/facture/{id}")
     public ResponseEntity<byte[]> genererFacture(@PathVariable Long id) {
-        byte[] pdf = commandeService.genererFacturePourCommande(id);
+        CommadeDTO dto=commandeService.getCommandeById(id);
+        List<Long> productIds=dto.getProductIds();
+        List<Integer> quantities=dto.getQuantities();
+        LinkedHashMap<Product, Integer> map = commandeService.matchProductsToCommande(productIds, quantities);
+        byte[] pdf = commandeService.genererFacturePourCommande(id,map);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
         headers.setContentDispositionFormData("filename", "facture_" + id + ".pdf");

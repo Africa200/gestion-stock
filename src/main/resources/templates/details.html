@@ -22,7 +22,7 @@
         <div class="card-body">
             <h5 class="card-title">Produits commandés</h5>
             <ul>
-                <li th:each="p : ${commande.products}" th:text="${p.libelle} + ' - ' + ${p.prix} + ' FCFA'"></li>
+                <li th:each="p : ${commande.products}" th:text="${p.libelle} + ' - ' + ${p.prixUnitaire} + ' FCFA'"></li>
             </ul>
             <hr>
             <p><strong>Prix total:</strong> <span th:text="${commande.prixTotal} + ' FCFA'"></span></p>
