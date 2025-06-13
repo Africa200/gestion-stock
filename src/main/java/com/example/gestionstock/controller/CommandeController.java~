@@ -25,8 +25,6 @@ import java.util.List;
 public class CommandeController {
     @Value("${admin.email}")
     private String email;
-    @Value("${admin.username}")
-    private String username;
     private  CommandeService commandeService;
     private ProductService productService;
     private MailService mailService;
@@ -90,7 +88,7 @@ public class CommandeController {
         savedCommande.getProducts().stream().forEach(p->{
             if (p.getQuantiteEnStock() <= p.getSeuilAlerte()){
                 System.out.println("Je suis dans le if de alerte");
-                String message = "Bonjour Cher " + username + ",\nLe produit " + p.getLibelle() + " est en rupture de stock, il reste " + p.getQuantiteEnStock() + " en stock";
+                String message = "Bonjour \nLe produit " + p.getLibelle() + " est en rupture de stock, il reste " + p.getQuantiteEnStock() + " en stock";
                 mailService.sendMail(email, new MailStructure("ROOT MANAGEMENT SYSTEM : ALERT PRODUITS EN STOCK", message));
             }
         });

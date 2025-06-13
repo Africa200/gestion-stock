@@ -1,9 +1,11 @@
 package com.example.gestionstock.services.impl;
 
+import com.example.gestionstock.dtos.CommadeDTO;
 import com.example.gestionstock.entity.Commande;
 import com.example.gestionstock.entity.Product;
 import com.example.gestionstock.repository.CommandeRepository;
 import com.example.gestionstock.repository.ProductRepository;
+import com.example.gestionstock.services.CommandeService;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.*;
 import org.springframework.stereotype.Service;
@@ -15,11 +17,13 @@ import java.util.List;
 public class RapportService {
     private ProductRepository productRepository;
     private CommandeRepository commandeRepository;
+    private CommandeService commandeService;
 
 
-    public RapportService(ProductRepository repository, CommandeRepository commandeRepository) {
+    public RapportService(ProductRepository repository, CommandeRepository commandeRepository, CommandeService commandeService) {
         this.productRepository = repository;
         this.commandeRepository = commandeRepository;
+        this.commandeService = commandeService;
     }
 
     public byte[] genererRapportGlobal() {
@@ -105,8 +109,8 @@ public class RapportService {
                 commandeTable.addCell(cell);
             }
 
-            List<Commande> commandes = commandeRepository.findAll();
-            for (Commande c : commandes) {
+            List<CommadeDTO> commandes = commandeService.getAllCommande();
+            for (CommadeDTO c : commandes) {
                 commandeTable.addCell(String.valueOf(c.getId()));
                 commandeTable.addCell(c.getClientInfo().getClientName());
             }

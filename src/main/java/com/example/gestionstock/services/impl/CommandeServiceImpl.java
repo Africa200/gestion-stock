@@ -35,19 +35,17 @@ public class CommandeServiceImpl implements CommandeService {
 
         Commande commande = CommandeMapper.toCommandeSansProduits(commandeDTO);
 
-        List<Product> validatedProducts = productIds.stream()
-                .map(id -> ProductMapper.toProduct(productService.getProductById(id)))
-                .toList();
+        List<Product> products=new ArrayList<>();
 
-
-        commande.setProducts(validatedProducts);
         // Decrementer le stock des produits de la commande
         for (Map.Entry<Product, Integer> entry : productIntegerLinkedHashMap.entrySet()) {
             Product product = entry.getKey();
             Integer quantity = entry.getValue();
             product.setQuantiteEnStock(product.getQuantiteEnStock() - quantity);
-            productService.updateProduct(ProductMapper.toProductDTO(product));
+            ProductDTO productDTO = productService.updateProduct(ProductMapper.toProductDTO(product));
+            products.add(ProductMapper.toProduct(productDTO));
         }
+        commande.setProducts(products);
         Commande saved = commandeRepository.save(commande);
         return CommandeMapper.toCommadeDTO(saved);
     }
