@@ -11,6 +11,7 @@ import com.itextpdf.text.pdf.*;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -62,7 +63,10 @@ public class RapportService {
             globalStats.add("Nombre total de produits : " + productRepository.count() + "\n");
             globalStats.add("Nombre total de commandes : " + commandeRepository.count() + "\n");
             java.util.List<Product> products= productRepository.findAll();
-            int totalQuantity = products.stream().mapToInt(Product::getQuantiteEnStock).sum();
+            int totalQuantity=0;
+            for (int i=0;i<=products.size()-1;i++){
+                totalQuantity+=products.get(i).getQuantiteEnStock()*products.get(i).getPrixUnitaire();
+            }
 
             globalStats.add("Valeur totale du stock : " + totalQuantity + " FCFA\n");
             globalStats.setSpacingAfter(15f);
@@ -94,7 +98,6 @@ public class RapportService {
 
             document.add(produitTable);
 
-            // Tableau des commandes (simplifié)
             Paragraph commandeSection = new Paragraph("\nCommandes :", titleFont);
             document.add(commandeSection);
 
@@ -110,9 +113,12 @@ public class RapportService {
             }
 
             List<CommadeDTO> commandes = commandeService.getAllCommande();
+            System.out.println("---------------------------------------------");
+            System.out.println(commandes);
             for (CommadeDTO c : commandes) {
                 commandeTable.addCell(String.valueOf(c.getId()));
                 commandeTable.addCell(c.getClientInfo().getClientName());
+                commandeTable.addCell(String.valueOf(new Date()));
             }
 
             document.add(commandeTable);

@@ -13,6 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@ToString
 public class Commande {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

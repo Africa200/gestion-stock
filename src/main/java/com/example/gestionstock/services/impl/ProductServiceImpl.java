@@ -5,6 +5,7 @@ import com.example.gestionstock.entity.Product;
 import com.example.gestionstock.mapper.ProductMapper;
 import com.example.gestionstock.repository.ProductRepository;
 import com.example.gestionstock.services.ProductService;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -58,7 +59,11 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public void deleteProduct(Long productId) {
-        productRepository.deleteById(productId);
+        try {
+            productRepository.deleteById(productId);
+        }catch (DataIntegrityViolationException e){
+            throw new RuntimeException("Impossible de supprimer ce produit car il est lié à une ou plusieurs commandes.");
+        }
     }
 
     @Override

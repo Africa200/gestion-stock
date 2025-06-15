@@ -39,9 +39,9 @@ public class DashboardController {
         this.rapportService = rapportService;
     }
 
-    @GetMapping("/dashboard")
+    @GetMapping("/")
     public String dashboard(Model model) {
-        // Simuler les données
+
         long totalItems = productService.countAllProducts();
         double inventoryValue = commandeService.getTotalPriceOfAllCommandes();
         long lowStockItems = productService.nombreProduitParEnStockFaible();

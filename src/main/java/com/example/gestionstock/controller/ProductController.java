@@ -7,6 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,7 +36,7 @@ public class ProductController {
     }
 
     @PostMapping("/products/add")
-    public String addProduct(@ModelAttribute ProductDTO productDTO,@RequestParam("imageFile") MultipartFile imageFile) throws IOException {
+    public String addProduct(@ModelAttribute ProductDTO productDTO,@RequestParam("imageFile") MultipartFile imageFile, RedirectAttributes redirectAttributes) throws IOException {
         if (!imageFile.isEmpty()) {
             // Crée le dossier s’il n’existe pas
             String uploadDir = "uploads/images";
@@ -54,6 +55,7 @@ public class ProductController {
         }
 
         productService.addProduct(productDTO);
+        redirectAttributes.addFlashAttribute("success", "Produit ajouter avec succès.");
         return "redirect:/products";
     }
 
@@ -64,8 +66,14 @@ public class ProductController {
     }
 
     @GetMapping("/products/delete/{id}")
-    public String deleteProduct(@PathVariable Long id) {
-        productService.deleteProduct(id);
+    public String deleteProduct(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            productService.deleteProduct(id);
+            redirectAttributes.addFlashAttribute("success", "Produit supprimé avec succès.");
+            return "redirect:/products";
+        }catch (RuntimeException e){
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
         return "redirect:/products";
     }
 }
