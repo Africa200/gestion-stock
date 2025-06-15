@@ -10,6 +10,7 @@ import com.example.gestionstock.repository.CommandeRepository;
 import com.example.gestionstock.services.CommandeService;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.*;
+import jakarta.transaction.Transactional;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
+@Transactional
 public class CommandeServiceImpl implements CommandeService {
     private final CommandeRepository commandeRepository;
     private final ProductServiceImpl productService;
@@ -33,6 +35,9 @@ public class CommandeServiceImpl implements CommandeService {
     @Override
     public CommadeDTO addCommande(CommadeDTO commandeDTO, List<Long> productIds,LinkedHashMap<Product, Integer> productIntegerLinkedHashMap) {
 
+        System.out.println("Apres la recuperation des produits dans le addCommande");
+        //System.out.println("productIds" + productIds);
+        System.out.println("Products map quantities" + productIntegerLinkedHashMap);
         Commande commande = CommandeMapper.toCommandeSansProduits(commandeDTO);
 
         List<Product> products=new ArrayList<>();
@@ -223,7 +228,6 @@ public class CommandeServiceImpl implements CommandeService {
     public LinkedHashMap<Product,Integer> matchProductsToCommande(List<Long> productIds,List<Integer> quantities) {
         LinkedHashMap<Product,Integer> map = new LinkedHashMap<>();
         for (int i=0;i<=productIds.size()-1;i++){
-
             ProductDTO byId = productService.getProductById(productIds.get(i));
             Product product = ProductMapper.toProduct(byId);
             map.put(product,quantities.get(i));

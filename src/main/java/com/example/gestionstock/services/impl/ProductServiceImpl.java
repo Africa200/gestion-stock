@@ -5,12 +5,14 @@ import com.example.gestionstock.entity.Product;
 import com.example.gestionstock.mapper.ProductMapper;
 import com.example.gestionstock.repository.ProductRepository;
 import com.example.gestionstock.services.ProductService;
+import jakarta.transaction.Transactional;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@Transactional
 public class ProductServiceImpl implements ProductService {
     private ProductRepository productRepository;
     private ProductMapper productMapper;

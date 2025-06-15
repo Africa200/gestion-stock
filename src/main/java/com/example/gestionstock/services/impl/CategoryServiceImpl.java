@@ -3,11 +3,13 @@ package com.example.gestionstock.services.impl;
 import com.example.gestionstock.entity.Category;
 import com.example.gestionstock.repository.CategoryRepository;
 import com.example.gestionstock.services.CategoryService;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@Transactional
 public class CategoryServiceImpl implements CategoryService {
     private CategoryRepository categoryRepository;
 

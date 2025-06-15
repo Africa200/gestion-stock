@@ -8,6 +8,7 @@ import com.example.gestionstock.repository.ProductRepository;
 import com.example.gestionstock.services.CommandeService;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.*;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
@@ -15,6 +16,7 @@ import java.util.Date;
 import java.util.List;
 
 @Service
+@Transactional
 public class RapportService {
     private ProductRepository productRepository;
     private CommandeRepository commandeRepository;
