@@ -1,8 +1,8 @@
-# 📦 Gestion de Stock et de Commandes - RootManagement
+#Gestion de Stock et de Commandes - RootManagement
 
 Une application web développée avec **Spring Boot** et **Thymeleaf** pour gérer les produits, les commandes clients, les factures PDF, et les alertes de stock faible.
 
-## 🧰 Technologies utilisées
+## Technologies utilisées
 
 - **Java 17 / Spring Boot 3**
 - **Thymeleaf** (Frontend intégré)
@@ -15,7 +15,7 @@ Une application web développée avec **Spring Boot** et **Thymeleaf** pour gér
 
 ---
 
-## 🚀 Mise en route (localement)
+##  Mise en route (localement)
 
 ### 1. Prérequis
 
