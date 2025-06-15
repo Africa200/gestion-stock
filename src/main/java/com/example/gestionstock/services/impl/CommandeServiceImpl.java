@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.sql.Date;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -51,6 +52,7 @@ public class CommandeServiceImpl implements CommandeService {
             products.add(ProductMapper.toProduct(productDTO));
         }
         commande.setProducts(products);
+        commande.setCreatAt(new Date(System.currentTimeMillis()));
         Commande saved = commandeRepository.save(commande);
         return CommandeMapper.toCommadeDTO(saved);
     }

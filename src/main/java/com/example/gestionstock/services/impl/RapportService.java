@@ -3,6 +3,7 @@ package com.example.gestionstock.services.impl;
 import com.example.gestionstock.dtos.CommadeDTO;
 import com.example.gestionstock.entity.Commande;
 import com.example.gestionstock.entity.Product;
+import com.example.gestionstock.mapper.ProductMapper;
 import com.example.gestionstock.repository.CommandeRepository;
 import com.example.gestionstock.repository.ProductRepository;
 import com.example.gestionstock.services.CommandeService;
@@ -12,8 +13,9 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
-import java.util.Date;
+import java.util.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -21,15 +23,17 @@ public class RapportService {
     private ProductRepository productRepository;
     private CommandeRepository commandeRepository;
     private CommandeService commandeService;
+    private ProductMapper productMapper;
 
 
-    public RapportService(ProductRepository repository, CommandeRepository commandeRepository, CommandeService commandeService) {
+    public RapportService(ProductRepository repository, CommandeRepository commandeRepository, CommandeService commandeService, ProductMapper productMapper) {
         this.productRepository = repository;
         this.commandeRepository = commandeRepository;
         this.commandeService = commandeService;
+        this.productMapper = productMapper;
     }
 
-    public byte[] genererRapportGlobal() {
+    public byte[] genererRapportGlobal(List<LinkedHashMap<Product, Integer>> list) {
         try {
             Document document = new Document();
             ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -122,8 +126,60 @@ public class RapportService {
                 commandeTable.addCell(c.getClientInfo().getClientName());
                 commandeTable.addCell(String.valueOf(new Date()));
             }
-
             document.add(commandeTable);
+
+
+            Paragraph BestSellingSection = new Paragraph("\nBest Selling :", titleFont);
+            document.add(BestSellingSection);
+
+            PdfPTable bestSellingTable = new PdfPTable(3);
+            bestSellingTable.setWidthPercentage(100);
+            bestSellingTable.setWidths(new float[]{2, 2, 2});
+            String[] bestSellingHeaders = {"Meilleur vente", "Nombre vendue", "Chiffre generer"};
+            for (String h : bestSellingHeaders) {
+                PdfPCell cell = new PdfPCell(new Phrase(h, font));
+                cell.setBackgroundColor(BaseColor.LIGHT_GRAY);
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                bestSellingTable.addCell(cell);
+            }
+            // Classer les produit du mieux vendu au moin vendu
+            LinkedHashMap<Product,Integer> bestSellingProducts=new LinkedHashMap<>();
+            for (LinkedHashMap<Product, Integer> map : list) {
+                for (Map.Entry<Product, Integer> entry : map.entrySet()) {
+                    Product product = entry.getKey();
+                    int quantity = entry.getValue();
+                    if(bestSellingProducts.get(product)==null){
+                        bestSellingProducts.put(product,quantity);
+                    }else {
+                        bestSellingProducts.put(product,bestSellingProducts.get(product)+quantity);
+                    }
+                }
+            }
+
+            LinkedHashMap<Product, Integer> sortedByValue = bestSellingProducts.entrySet()
+                    .stream()
+                    //S.sorted(Map.Entry.comparingByValue()) // Tri ascendant (20, 25, 30)
+                    .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder())) // Tri descendant (30, 25, 20)
+                    .collect(
+                            Collectors.toMap(
+                                    Map.Entry::getKey,
+                                    Map.Entry::getValue,
+                                    (oldVal, newVal) -> oldVal,
+                                    LinkedHashMap::new
+                            )
+                    );
+
+
+            for (Map.Entry<Product, Integer> entry : sortedByValue.entrySet()) {
+                Product p = entry.getKey();
+                int quantiteVendue = entry.getValue();
+
+                bestSellingTable.addCell(p.getLibelle());
+                bestSellingTable.addCell(String.valueOf(quantiteVendue));
+                bestSellingTable.addCell(String.format("%.2f", quantiteVendue * p.getPrixUnitaire()));
+            }
+
+            document.add(bestSellingTable);
 
             document.close();
             return out.toByteArray();

@@ -50,7 +50,6 @@ public class CommandeController {
                               Model model, RedirectAttributes redirectAttributes, BindingResult bindingResult) {
 
         CommadeDTO savedCommande;
-        System.out.println("Les quaniter aprs recuperation dans le Commade.html" + quantities);
         try {
             if (productIds == null || quantities == null || productIds.isEmpty() || quantities.isEmpty()) {
                 redirectAttributes.addFlashAttribute("error", "Erreur technique. Veillez entrez des donnees valide");

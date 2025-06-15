@@ -19,6 +19,7 @@ public class CommandeMapper {
         commande.setPrixTotal(commandeDto.getPrixTotal());
         commande.setProductIds(commandeDto.getProductIds());
         commande.setQuantities(commandeDto.getQuantities());
+        commande.setCreatAt(commandeDto.getCreatAt());
         return commande;
     }
 
@@ -34,6 +35,7 @@ public class CommandeMapper {
         commandeDto.setPrixTotal(commande.getPrixTotal());
         commandeDto.setProductIds(commande.getProductIds());
         commandeDto.setQuantities(commande.getQuantities());
+        commandeDto.setCreatAt(commande.getCreatAt());
         return commandeDto;
     }
 }

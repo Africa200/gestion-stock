@@ -1,5 +1,6 @@
 package com.example.gestionstock.controller;
 
+import com.example.gestionstock.dtos.CommadeDTO;
 import com.example.gestionstock.dtos.ProductDTO;
 import com.example.gestionstock.entity.Category;
 import com.example.gestionstock.entity.Product;
@@ -75,7 +76,10 @@ public class DashboardController {
 
     @GetMapping("/rapport/generer")
     public ResponseEntity<byte[]> genererRapport() {
-        byte[] pdf = rapportService.genererRapportGlobal();
+        List<CommadeDTO> commadeDTOS=commandeService.getAllCommande();
+        List<LinkedHashMap<Product, Integer>> collect = commadeDTOS.stream().map(p -> commandeService.matchProductsToCommande(p.getProductIds(), p.getQuantities())).collect(Collectors.toList());
+
+        byte[] pdf = rapportService.genererRapportGlobal(collect);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);

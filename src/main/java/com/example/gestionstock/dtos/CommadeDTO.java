@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -25,4 +26,5 @@ public class CommadeDTO {
     private List<ProductDTO> products;
     private List<Long> productIds;
     private List<Integer> quantities;
+    private Date creatAt;
 }
